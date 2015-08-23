@@ -33,7 +33,7 @@ class TestController extends Controller
         });
         foreach ($dirs as $region) {
             $files = $ftp->lsFiles("{$region}/contracts");
-            //print_r($files);
+            print_r($files);
         }
         echo Yii::$app->getRuntimePath() . PHP_EOL;
         $ftp->disconnect();
