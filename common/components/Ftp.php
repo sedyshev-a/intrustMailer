@@ -4,6 +4,7 @@ namespace common\components;
 use Yii;
 use yii\base\Exception;
 use yii\base\ErrorException;
+use yii\helpers\BaseFileHelper;
 use yii\base\Object;
 
 class Ftp extends Object
@@ -16,6 +17,8 @@ class Ftp extends Object
     public $password = '';
 
     public $passiveMode = true;
+
+    public $localDir = '';
 
     protected $lastError = '';
 
@@ -111,7 +114,7 @@ class Ftp extends Object
         }
         return $result;
     }
-    public function lsFiles($path = null)
+    public function lsFiles($path = null, $minSize = null)
     {
         if (!$this->isReady()) {
             return false;
@@ -128,6 +131,30 @@ class Ftp extends Object
             if ($splitted[0]{0} === 'd') {
                 continue;
             }
+            if (!is_null($minSize) && $splitted[4] <= $minSize) {
+                continue;
+            }
+            $result[] = $splitted[8];
+        }
+        return $result;
+    }
+    public function lsFilesCriteria($path = null)
+    {
+        if (!$this->isReady()) {
+            return false;
+        }
+        try {
+            $list = ftp_rawlist($this->connection, $path);
+        } catch (ErrorException $e) {
+            $this->setLastError($e->getMessage());
+            return false;
+        }
+        $result = [];
+        foreach ($list as $item) {
+            $splitted = preg_split("/\s+/", $item);
+            if ($splitted[0]{0} === 'd' ) {
+                continue;
+            }
             $result[] = $splitted[8];
         }
         return $result;
@@ -139,6 +166,36 @@ class Ftp extends Object
         }
         try {
             $result = ftp_chdir($this->connection, $dirName);
+        } catch (ErrorException $e) {
+            $this->setLastError($e->getMessage());
+            $result = false;
+        }
+        return $result;
+    }
+    public function get($filePath, $localPath = null)
+    {
+        if (!$this->isReady() || empty($filePath)) {
+            return false;
+        }
+        if (is_null($localPath)) {
+            if (!empty($this->localDir)) {
+                $localPath = $this->localDir;
+            }
+            else return false;
+        }
+
+        try {
+            Yii::trace($localPath . '/'.basename($filePath));
+            BaseFileHelper::createDirectory($localPath);
+        } catch (Exception $e) {
+            $this->setLastError($e->getMessage());
+            return false;
+        }
+
+        try {
+            Yii::trace($localPath . '/'.basename($filePath));
+
+            $result = ftp_get($this->connection, $localPath . '/'.basename($filePath), $filePath, FTP_BINARY);
         } catch (ErrorException $e) {
             $this->setLastError($e->getMessage());
             $result = false;
