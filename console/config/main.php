@@ -21,7 +21,7 @@ return [
                 ],
                 [
                     'class' => 'yii\log\FileTarget',
-                    'levels' => ['trace', 'info'],
+                    'levels' => ['info'],
                     'logVars' => [],
                     'logFile' => '@runtime/logs/dev.log'
                 ],

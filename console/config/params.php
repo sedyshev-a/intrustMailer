@@ -13,4 +13,13 @@ return [
             'fcs_undefined',
         ],
     ],
+    'stopList' => [
+        'usernames' => [
+            'нет', 'нету', 'net', 'nety', 'netu',
+        ],
+        'domains' => [
+
+        ],
+    ],
+
 ];
