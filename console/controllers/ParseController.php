@@ -3,8 +3,6 @@ namespace console\controllers;
 
 use common\components\zContractParser\zContractParser;
 use Yii;
-use yii\base\Exception;
-use yii\helpers\VarDumper;
 use yii\base\ErrorException;
 use yii\helpers\BaseFileHelper;
 use yii\console\Controller;
@@ -21,7 +19,6 @@ class ParseController extends Controller
             'only' => ['*.zip'],
             'recursive' => false,
         ]);
-
         $zip = new \ZipArchive();
         foreach ($archivesList as $archivePath) {
             try {
@@ -33,6 +30,7 @@ class ParseController extends Controller
             if ($zipOpened !== true) {
                 continue;
             }
+            //$date = \DateTime::createFromFormat()
             $numFiles = $zip->numFiles;
             for ($i=0; $i<$numFiles; $i++) {
 
@@ -42,25 +40,19 @@ class ParseController extends Controller
                     continue;
                 }
 
-                $contactParser = new zContractParser($zip->getFromIndex($i));
-                $suppliers = $contactParser->getSuppliersInfo();
+                $contractParser = new zContractParser($zip->getFromIndex($i));
+                $isBuilder = $contractParser->isBuilding();
+
+                $suppliers = $contractParser->getSuppliersInfo();
                 if ($suppliers === false || count($suppliers) < 1) {
-                    print '---------------' . $xmlFilename . '---------------'.PHP_EOL;
-                    print 'No suppliers: ' . basename($archivePath) . PHP_EOL;
-                    print '-----------------------' . PHP_EOL;
+//                    print '---------------' . $xmlFilename . '---------------'.PHP_EOL;
+//                    print 'No suppliers: ' . basename($archivePath) . PHP_EOL;
+//                    print '-----------------------' . PHP_EOL;
                     continue;
                 }
+
             }
         }
         return Controller::EXIT_CODE_NORMAL;
-    }
-
-    protected function parseXML($xmlString)
-    {
-        $xml = simplexml_load_string($xmlString);
-        if ($xml === false) {
-            return false;
-        }
-
     }
 }

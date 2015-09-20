@@ -37,12 +37,12 @@ abstract class AbstractSupplier
         $info = $this->getInfo();
         $validInn = $this->validateINN();
         if (!$validInn) {
-            print $this->inn . PHP_EOL;
+            //print $this->inn . PHP_EOL;
             return false;
         }
         $validMail = $this->validateEmails();
         if (!$validMail) {
-            print_r($this->emails);
+            //print_r($this->emails);
             return false;
         }
 
