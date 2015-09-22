@@ -50,7 +50,7 @@ class ParseController extends Controller
 //                    print '-----------------------' . PHP_EOL;
                     continue;
                 }
-                if (empty($suppliers['type'])) {
+                if (empty($suppliers[0]['type'])) {
                     print_r($suppliers);
                 }
             }
