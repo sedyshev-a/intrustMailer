@@ -30,7 +30,9 @@ class ParseController extends Controller
             if ($zipOpened !== true) {
                 continue;
             }
-            //$date = \DateTime::createFromFormat()
+            print basename($archivePath) . PHP_EOL;
+            $actualDate = $this->extractActualDate(basename($archivePath));
+            print $actualDate->format('d.m.Y') . PHP_EOL;
             $numFiles = $zip->numFiles;
             for ($i=0; $i<$numFiles; $i++) {
 
@@ -50,11 +52,20 @@ class ParseController extends Controller
 //                    print '-----------------------' . PHP_EOL;
                     continue;
                 }
-                if (empty($suppliers[0]['type'])) {
-                    var_dump($suppliers[0]['type']);
-                }
             }
         }
         return Controller::EXIT_CODE_NORMAL;
+    }
+
+    private function extractActualDate($filename)
+    {
+        $result = preg_match("/.*?(\\d+)/i",$filename,$matches);
+        if ($result === false || $result === 0) {
+            return false;
+        }
+        $strDate = $matches[0];
+        $date = \DateTime::createFromFormat('Ymd00',$strDate);
+
+        return $date;
     }
 }
