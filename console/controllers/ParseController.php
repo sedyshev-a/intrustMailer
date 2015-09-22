@@ -51,7 +51,7 @@ class ParseController extends Controller
                     continue;
                 }
                 if (empty($suppliers[0]['type'])) {
-                    print_r($suppliers);
+                    var_dump($suppliers[0]['type']);
                 }
             }
         }
