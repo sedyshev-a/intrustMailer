@@ -63,11 +63,13 @@ class ParseController extends Controller
     private function extractActualDate($filename)
     {
         $result = preg_match("/.*?(\\d+)/i",$filename,$matches);
+
         if ($result === false || $result === 0) {
             return false;
         }
         $strDate = $matches[0];
-        $date = \DateTime::createFromFormat('Ymd00',$strDate);
+        print $strDate . PHP_EOL;
+        $date = \DateTime::createFromFormat('Ymd??',$strDate);
 
         return $date;
     }
