@@ -68,7 +68,7 @@ class ParseController extends Controller
             return false;
         }
         $strDate = $matches[0];
-        print $strDate . PHP_EOL;
+        print_r($matches);
         $date = \DateTime::createFromFormat('Ymd??',$strDate);
 
         return $date;
