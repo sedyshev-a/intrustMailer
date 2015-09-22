@@ -50,7 +50,7 @@ class ParseController extends Controller
 //                    print '-----------------------' . PHP_EOL;
                     continue;
                 }
-
+                print_r($suppliers);
             }
         }
         return Controller::EXIT_CODE_NORMAL;
