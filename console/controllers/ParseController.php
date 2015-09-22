@@ -4,6 +4,7 @@ namespace console\controllers;
 use common\components\zContractParser\zContractParser;
 use Yii;
 use yii\base\ErrorException;
+use yii\base\Exception;
 use yii\helpers\BaseFileHelper;
 use yii\console\Controller;
 
@@ -20,6 +21,30 @@ class ParseController extends Controller
             'recursive' => false,
         ]);
         $zip = new \ZipArchive();
+
+        $type = NULL;
+        $regDate = NULL;
+        $actualDate = NULL;
+        $inn = NULL;
+        $kpp = NULL;
+        $fullName = NULL;
+        $shortName = NULL;
+        $firmName = NULL;
+        $isBuilder = NULL;
+        $pdo = Yii::$app->db->pdo;
+        $orgSQL = <<<SQL
+INSERT INTO organizations (type, regDate, actualDate, inn, kpp, fullName, shortName, firmName, isBulder)
+VALUES (:type, :regDate, :actualDate, :inn, :kpp, :fullName, :shortName, :firmName, :isBuilder)
+ON DUPLICATE KEY UPDATE
+  type = IF((:actualDate > actualDate), :type, type),
+  kpp = IF((:actualDate > actualDate), :kpp, kpp),
+  fullName = IF((:actualDate > actualDate), :fullName, fullName),
+  shortName = IF((:actualDate > actualDate), :shortName, shortName),
+  firmName = IF((:actualDate > actualDate), :firmName, firmName)
+SQL;
+
+        $orgStatement = $pdo->prepare($orgSQL);
+
         foreach ($archivesList as $archivePath) {
             try {
                 $zipOpened = $zip->open($archivePath);
@@ -30,10 +55,9 @@ class ParseController extends Controller
             if ($zipOpened !== true) {
                 continue;
             }
-            print basename($archivePath) . PHP_EOL;
             $actualDate = $this->extractActualDate(basename($archivePath));
-            if ($actualDate instanceof \DateTime) {
-                print $actualDate->format('d.m.Y') . PHP_EOL;
+            if (!($actualDate instanceof \DateTime)) {
+                throw new Exception('Can\'t extract actualDate');
             }
 
             $numFiles = $zip->numFiles;
