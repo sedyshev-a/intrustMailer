@@ -67,8 +67,7 @@ class ParseController extends Controller
         if ($result === false || $result === 0) {
             return false;
         }
-        $strDate = $matches[0];
-        print_r($matches);
+        $strDate = $matches[1];
         $date = \DateTime::createFromFormat('Ymd??',$strDate);
 
         return $date;
