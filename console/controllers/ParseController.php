@@ -32,7 +32,10 @@ class ParseController extends Controller
             }
             print basename($archivePath) . PHP_EOL;
             $actualDate = $this->extractActualDate(basename($archivePath));
-            print $actualDate->format('d.m.Y') . PHP_EOL;
+            if ($actualDate instanceof \DateTime) {
+                print $actualDate->format('d.m.Y') . PHP_EOL;
+            }
+
             $numFiles = $zip->numFiles;
             for ($i=0; $i<$numFiles; $i++) {
 
