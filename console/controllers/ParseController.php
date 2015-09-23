@@ -31,7 +31,9 @@ class ParseController extends Controller
         $shortName = NULL;
         $firmName = NULL;
         $isBuilder = NULL;
-        $pdo = Yii::$app->db->pdo;
+        $pdo = Yii::$app->db->getMasterPdo();
+        var_dump($pdo);
+
         $orgSQL = <<<SQL
 INSERT INTO organizations (type, regDate, actualDate, inn, kpp, fullName, shortName, firmName, isBulder)
 VALUES (:type, :regDate, :actualDate, :inn, :kpp, :fullName, :shortName, :firmName, :isBuilder)
