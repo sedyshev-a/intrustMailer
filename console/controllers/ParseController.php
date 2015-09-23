@@ -32,7 +32,6 @@ class ParseController extends Controller
         $firmName = NULL;
         $isBuilder = NULL;
         $pdo = Yii::$app->db->getMasterPdo();
-        var_dump($pdo);
 
         $orgSQL = <<<SQL
 INSERT INTO organizations (type, regDate, actualDate, inn, kpp, fullName, shortName, firmName, isBulder)
@@ -120,18 +119,18 @@ SQL;
 //                    print '-----------------------' . PHP_EOL;
                     continue;
                 }
-                print $type . PHP_EOL;
                 foreach ($suppliers as $supplier) {
-                    $type = $supplier['type'];
-                    $regDate = $supplier['regDate'];
+                    $type = empty($supplier['type']) ? null : $supplier['type'];
+                    $regDate = empty($supplier['regDate']) ? null : $supplier['regDate'];
                     $inn = $supplier['inn'];
-                    $kpp = $supplier['kpp'];
-                    $fullName = $supplier['fullName'];
-                    $shortName = $supplier['shortName'];
-                    $firmName = $supplier['firmName'];
+                    $kpp = empty($supplier['kpp']) ? null : $supplier['kpp'];
+                    $fullName = empty($supplier['fullName']) ? null : $supplier['fullName'];
+                    $shortName = empty($supplier['shortName']) ? null : $supplier['shortName'];
+                    $firmName = empty($supplier['firmName']) ? null : $supplier['firmName'];
                     $isBuilder = (int)$isBuilder;
+                    print_r($supplier);
                 }
-                print $type . PHP_EOL;
+
             }
         }
         return Controller::EXIT_CODE_NORMAL;
