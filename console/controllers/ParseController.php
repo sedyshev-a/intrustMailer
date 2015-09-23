@@ -53,6 +53,7 @@ SQL;
         $orgStatement->bindParam(':inn',$inn);
         $orgStatement->bindParam(':kpp',$kpp);
         $orgStatement->bindParam(':fullName',$fullName);
+        $orgStatement->bindParam(':shortName',$shortName);
         $orgStatement->bindParam(':firmName',$firmName);
         $orgStatement->bindParam(':isBuilder',$isBuilder);
 
