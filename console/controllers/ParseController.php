@@ -36,14 +36,53 @@ class ParseController extends Controller
 INSERT INTO organizations (type, regDate, actualDate, inn, kpp, fullName, shortName, firmName, isBulder)
 VALUES (:type, :regDate, :actualDate, :inn, :kpp, :fullName, :shortName, :firmName, :isBuilder)
 ON DUPLICATE KEY UPDATE
-  type = IF((:actualDate > actualDate), :type, type),
-  kpp = IF((:actualDate > actualDate), :kpp, kpp),
-  fullName = IF((:actualDate > actualDate), :fullName, fullName),
-  shortName = IF((:actualDate > actualDate), :shortName, shortName),
-  firmName = IF((:actualDate > actualDate), :firmName, firmName)
+  type       = IF((:actualDate > actualDate), :type, type),
+  kpp        = IF((:actualDate > actualDate), :kpp, kpp),
+  fullName   = IF((:actualDate > actualDate), :fullName, fullName),
+  shortName  = IF((:actualDate > actualDate), :shortName, shortName),
+  firmName   = IF((:actualDate > actualDate), :firmName, firmName),
+  actualDate = IF((:actualDate > actualDate), :actualDate, actualDate),
+  id         = LAST_INSERT_ID(id);
 SQL;
 
         $orgStatement = $pdo->prepare($orgSQL);
+        $orgStatement->bindParam(':type',$type);
+        $orgStatement->bindParam(':regDate',$regDate);
+        $orgStatement->bindParam(':actualDate',$actualDate);
+        $orgStatement->bindParam(':inn',$inn);
+        $orgStatement->bindParam(':kpp',$kpp);
+        $orgStatement->bindParam(':fullName',$fullName);
+        $orgStatement->bindParam(':firmName',$firmName);
+        $orgStatement->bindParam(':isBuilder',$isBuilder);
+
+        $contactsSQL = <<<SQL
+INSERT IGNORE INTO contacts (orgId, lastName, firstName, middleName, email, tel, emailStage)
+VALUES (:orgId, :lastName, :lastName, :firstName, :middleName, :email, :tel);
+SQL;
+        $orgId = null;
+        $lastName = null;
+        $firstName = null;
+        $middleName = null;
+        $email = null;
+        $tel = null;
+        $contactsStatement = $pdo->prepare($contactsSQL);
+        $contactsStatement->bindParam(':orgId', $orgId);
+        $contactsStatement->bindParam(':lastName', $lastName);
+        $contactsStatement->bindParam(':firstName', $firstName);
+        $contactsStatement->bindParam(':middleName', $middleName);
+        $contactsStatement->bindParam(':email', $email);
+        $contactsStatement->bindParam(':tel', $tel);
+        $contactsStatement->bindValue(':emailStage', 1);
+        $contactsStatement->bindParam(':orgId', $orgId);
+
+        $addrSQL = <<<SQL
+INSERT IGNORE INTO addresses (orgId, address)
+VALUES (:orgId, :address);
+SQL;
+        $address = null;
+        $addrStatement = $pdo->prepare($addrSQL);
+        $addrStatement->bindParam(':orgId', $orgId);
+        $addrStatement->bindParam(':address', $address);
 
         foreach ($archivesList as $archivePath) {
             try {
@@ -59,13 +98,13 @@ SQL;
             if (!($actualDate instanceof \DateTime)) {
                 throw new Exception('Can\'t extract actualDate');
             }
-
+            $actualDate = $actualDate->format('Y-m-d');
             $numFiles = $zip->numFiles;
             for ($i=0; $i<$numFiles; $i++) {
 
                 $xmlFilename = $zip->getNameIndex($i);
-                $type = explode('_',$xmlFilename)[0];
-                if ($type !== 'contract') {
+                $fileType = explode('_',$xmlFilename)[0];
+                if ($fileType !== 'contract') {
                     continue;
                 }
 
@@ -79,6 +118,18 @@ SQL;
 //                    print '-----------------------' . PHP_EOL;
                     continue;
                 }
+                print $type . PHP_EOL;
+                foreach ($suppliers as $supplier) {
+                    $type = $supplier['type'];
+                    $regDate = $supplier['regDate'];
+                    $inn = $supplier['inn'];
+                    $kpp = $supplier['kpp'];
+                    $fullName = $supplier['fullName'];
+                    $shortName = $supplier['shortName'];
+                    $firmName = $supplier['firmName'];
+                    $isBuilder = (int)$isBuilder;
+                }
+                print $type . PHP_EOL;
             }
         }
         return Controller::EXIT_CODE_NORMAL;
