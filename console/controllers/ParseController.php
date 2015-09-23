@@ -59,7 +59,7 @@ SQL;
 
         $contactsSQL = <<<SQL
 INSERT IGNORE INTO contacts (orgId, lastName, firstName, middleName, email, tel, emailStage)
-VALUES (:orgId, :lastName, :lastName, :firstName, :middleName, :email, :tel);
+VALUES (:orgId, :lastName, :firstName, :middleName, :email, :tel, :emailStage);
 SQL;
         $orgId = null;
         $lastName = null;
