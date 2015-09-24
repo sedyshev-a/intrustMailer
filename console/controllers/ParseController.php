@@ -153,6 +153,7 @@ SQL;
                     }
                 }
             }
+            unlink($archivePath);
         }
         $pdo->exec('SET foreign_key_checks=0;');
 
