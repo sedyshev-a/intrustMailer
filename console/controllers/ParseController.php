@@ -136,21 +136,21 @@ SQL;
                     $tel = empty($supplier['phone']) ? null : $supplier['phone'];
                     $address = empty($supplier['address']) ? null : $supplier['address'];
                     $emails = $supplier['emails'];
-//                    try {
-//                        $pdo->beginTransaction();
-//                        $orgStatement->execute();
-//                        $orgId = $pdo->lastInsertId();
-//                        $addrStatement->execute();
-//                        foreach($emails as $mail) {
-//                            $email = $mail;
-//                            $contactsStatement->execute();
-//                        }
-//                        $pdo->commit();
-//
-//                    } catch (\PDOException $e) {
-//                        $pdo->rollBack();
-//                        print 'Transaction error: ' . $e->getMessage() . PHP_EOL;
-//                    }
+                    try {
+                        $pdo->beginTransaction();
+                        $orgStatement->execute();
+                        $orgId = $pdo->lastInsertId();
+                        $addrStatement->execute();
+                        foreach($emails as $mail) {
+                            $email = $mail;
+                            $contactsStatement->execute();
+                        }
+                        $pdo->commit();
+
+                    } catch (\PDOException $e) {
+                        $pdo->rollBack();
+                        print 'Transaction error: ' . $e->getMessage() . PHP_EOL;
+                    }
                 }
             }
         }
