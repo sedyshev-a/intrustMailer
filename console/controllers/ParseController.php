@@ -32,7 +32,7 @@ class ParseController extends Controller
         $firmName = NULL;
         $isBuilder = NULL;
         $pdo = Yii::$app->db->getMasterPdo();
-
+        $pdo->exec('SET foreign_key_checks=0;');
         $orgSQL = <<<SQL
 INSERT INTO organizations (type, regDate, actualDate, inn, kpp, fullName, shortName, firmName, isBulder)
 VALUES (:type, :regDate, :actualDate, :inn, :kpp, :fullName, :shortName, :firmName, :isBuilder)
@@ -153,6 +153,8 @@ SQL;
                 }
             }
         }
+        $pdo->exec('SET foreign_key_checks=0;');
+
         return Controller::EXIT_CODE_NORMAL;
     }
 
