@@ -99,6 +99,7 @@ SQL;
             if (!($actualDate instanceof \DateTime)) {
                 throw new Exception('Can\'t extract actualDate');
             }
+            print basename($archivePath) . PHP_EOL;
             $actualDate = $actualDate->format('Y-m-d');
             $numFiles = $zip->numFiles;
             for ($i=0; $i<$numFiles; $i++) {
