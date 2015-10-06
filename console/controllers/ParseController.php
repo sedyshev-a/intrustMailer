@@ -74,7 +74,7 @@ SQL;
         $contactsStatement->bindParam(':middleName', $middleName);
         $contactsStatement->bindParam(':email', $email);
         $contactsStatement->bindParam(':tel', $tel);
-        $contactsStatement->bindValue(':emailStage', 1);
+        $contactsStatement->bindValue(':emailStage', 0);
 
         $addrSQL = <<<SQL
 INSERT IGNORE INTO addresses (orgId, address)

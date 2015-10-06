@@ -12,10 +12,11 @@ return [
             '_logs',
             'fcs_undefined',
         ],
+        'contractsPath' => '/contracts',
     ],
     'stopList' => [
         'usernames' => [
-            'нет', 'нету', 'net', 'nety', 'netu',
+            'нет', 'нету', 'net', 'nety', 'netu', '-',
         ],
         'domains' => [
 
