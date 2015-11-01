@@ -2,6 +2,7 @@
 namespace common\components\zContractParser;
 
 use Yii;
+use yii\base\ErrorException;
 use yii\base\Exception;
 
 abstract class AbstractSupplier
@@ -108,15 +109,46 @@ abstract class AbstractSupplier
                 continue;
             }
             $user = $exploded[0];
-            if (in_array($user, $stopUsernames)) {
+            if (in_array($user, $stopUsernames['text'])) {
+                continue;
+            }
+            $passed = true;
+            foreach ($stopUsernames['regexes'] as $regex) {
+                try {
+                    $match = preg_match($regex,$user);
+                } catch (ErrorException $e) {
+                    Yii::warning("$regex isn't a valid regex");
+                    $match = false;
+                }
+                if ($match === 1) {
+                    $passed = false;
+                    break;
+                }
+            }
+            if (!$passed) {
                 continue;
             }
             $domain = $exploded[1];
-            if (in_array($domain, $stopDomains)) {
+            if (in_array($domain, $stopDomains['text'])) {
                 continue;
             }
             $exploded = explode('.',$domain);
             if (count($exploded) < 2) {
+                continue;
+            }
+            foreach ($stopDomains['regexes'] as $regex) {
+                try {
+                    $match = preg_match($regex,$user);
+                } catch (ErrorException $e) {
+                    Yii::warning("$regex isn't a valid regex");
+                    $match = false;
+                }
+                if ($match === 1) {
+                    $passed = false;
+                    break;
+                }
+            }
+            if (!$passed) {
                 continue;
             }
             $tldIndex = count($exploded) - 1;

@@ -13,11 +13,13 @@ return [
     'controllerNamespace' => 'console\controllers',
     'components' => [
         'log' => [
+            'flushInterval' => 1,
             'targets' => [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                     'logVars' => [],
+                    'exportInterval' => 1,
                 ],
                 [
                     'class' => 'yii\log\FileTarget',

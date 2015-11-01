@@ -7,6 +7,9 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Psr7\Request;
 use yii\base\InvalidParamException;
 use GuzzleHttp\Exception\RequestException;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 
 class PostRequest implements Configurable
 {
@@ -96,23 +99,51 @@ class PostRequest implements Configurable
     }
     public function send()
     {
+        $onRedirect = function(
+            RequestInterface $request,
+            ResponseInterface $response,
+            UriInterface $uri
+        ) {
+            echo 'Redirecting to ' . $uri . "\n";
+        };
+
         try {
             $response = $this->client->request('POST',$this->getUri(),[
                 'form_params' => $this->getFormParams(),
                 'proxy' => $this->getProxy(),
-
+                //'debug' => true,
+                'allow_redirects' => [
+                    'on_redirect'     => $onRedirect,
+                    'track_redirects' => true
+                ]
             ]);
+            print 'Status: '  . $response->getStatusCode() . PHP_EOL;
+            $body = $response->getBody();
+            //print $body . PHP_EOL;
         } catch (RequestException $e) {
-            //echo $e->getRequest()->getRequestTarget();
+            print "RequestException handled!" . PHP_EOL;
             if ($e->hasResponse()) {
-                echo "hasResponse: " . $e->getResponse()->getStatusCode() . PHP_EOL;
+                echo "hasResponse! Code: " . $e->getResponse()->getStatusCode() . PHP_EOL;
+                echo $e->getResponse()->getBody() . PHP_EOL;
             }
             else {
-
+                echo "No response!" . PHP_EOL;
             }
 
         }
     }
 
+    public function onRedirect()
+    {
+        $onRedirect = function(
+            RequestInterface $request,
+            ResponseInterface $response,
+            UriInterface $uri
+        ) {
+            echo 'Redirecting! ' . $request->getUri() . ' to ' . $uri . "\n";
+        };
+
+        return $onRedirect;
+    }
 
 }

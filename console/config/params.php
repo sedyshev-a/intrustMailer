@@ -16,10 +16,21 @@ return [
     ],
     'stopList' => [
         'usernames' => [
-            'нет', 'нету', 'net', 'nety', 'netu', '-',
+            'text' => [
+                'нет', 'нету', 'net', 'nety', 'netu', '-',
+            ],
+            'regexes' => [
+                "/^[^a-zа-я0-9]+$/iu"
+            ],
+
         ],
         'domains' => [
+            'text' => [
 
+            ],
+            'regexes' => [
+
+            ],
         ],
     ],
 
