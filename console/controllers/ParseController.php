@@ -34,7 +34,7 @@ class ParseController extends Controller
         $pdo = Yii::$app->db->getMasterPdo();
         $pdo->exec('SET foreign_key_checks=0;');
         $orgSQL = <<<SQL
-INSERT INTO organizations (type, regDate, actualDate, inn, kpp, fullName, shortName, firmName, isBulder)
+INSERT INTO organizations (type, regDate, actualDate, inn, kpp, fullName, shortName, firmName, isBuilder)
 VALUES (:type, :regDate, :actualDate, :inn, :kpp, :fullName, :shortName, :firmName, :isBuilder)
 ON DUPLICATE KEY UPDATE
   type       = IF((:actualDate > actualDate), :type, type),
