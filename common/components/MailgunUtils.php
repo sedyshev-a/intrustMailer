@@ -1,15 +1,16 @@
 <?php
-namespace console\controllers;
+namespace common\components;
 
 
 use common\models\MailgunKeys;
 use Mailgun\Mailgun;
 use Yii;
+use yii\base\Component;
 use yii\base\InvalidParamException;
 use yii\console\Controller;
 use yii\console\Exception;
 
-class MailgunController extends Controller
+class MailgunUtils extends Component
 {
 
     /** @var Mailgun */
@@ -35,7 +36,7 @@ class MailgunController extends Controller
             'status' => MailgunKeys::STATUS_ACTIVE
         ]);
         if (is_null($keyItem)) {
-            throw new Exception("No active mailgun accounts!");
+            throw new Exception("No available mailgun accounts!");
         }
         $this->mailgun = new Mailgun($keyItem->api_key);
         $domains = $this->fetchDomains();
@@ -45,14 +46,6 @@ class MailgunController extends Controller
         else {
             throw new Exception("No domains in mailgun account!");
         }
-    }
-
-    public function beforeAction($action) {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-        $this->checkRequiredAPIParams();
-        return true;
     }
 
     public function checkRequiredAPIParams()

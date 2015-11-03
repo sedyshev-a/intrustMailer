@@ -23,6 +23,11 @@ class Contacts extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
+    const EMAIL_STAGE_INVALID = -1;
+    const EMAIL_STAGE_NEW = 0;
+
+
+
     public static function tableName()
     {
         return 'contacts';
@@ -64,5 +69,20 @@ class Contacts extends \yii\db\ActiveRecord
     public function getOrg()
     {
         return $this->hasOne(Organizations::className(), ['id' => 'orgId']);
+    }
+
+    /**
+     * @param int $limit
+     * @return array|\yii\db\ActiveRecord[]
+     */
+    public static function getVerifyingNeededEmails($limit = 1000)
+    {
+        $emails = self::find()
+            ->select('email')
+            ->where(['emailStage' => [self::EMAIL_STAGE_NEW]])
+            ->limit($limit)
+            ->all();
+
+        return $emails;
     }
 }
