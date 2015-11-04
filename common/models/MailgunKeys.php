@@ -9,13 +9,13 @@ use Yii;
  *
  * @property integer $id
  * @property string $api_key
- * @property string $domain
- * @property string $status
+ * @property string $pub_key
+ * @property integer $banned
+ * @property integer $locked
+ * @property string $login
  */
 class MailgunKeys extends \yii\db\ActiveRecord
 {
-    const STATUS_ACTIVE = 1;
-    const STATUS_INACTIVE = 0;
     /**
      * @inheritdoc
      */
@@ -31,8 +31,11 @@ class MailgunKeys extends \yii\db\ActiveRecord
     {
         return [
             [['api_key'], 'required'],
-            [['api_key', 'domain', 'status'], 'string', 'max' => 45],
-            [['api_key'], 'unique']
+            [['banned', 'locked'], 'integer'],
+            [['api_key', 'pub_key'], 'string', 'max' => 150],
+            [['login'], 'string', 'max' => 100],
+            [['api_key'], 'unique'],
+            [['login'], 'unique']
         ];
     }
 
@@ -44,8 +47,55 @@ class MailgunKeys extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'api_key' => 'Api Key',
-            'domain' => 'Domain',
-            'status' => 'Status',
+            'pub_key' => 'Pub Key',
+            'banned' => 'Banned',
+            'locked' => 'Locked',
+            'login' => 'Login',
         ];
+    }
+
+    /**
+     * @inheritdoc
+     * @return MailgunKeysQuery the active query used by this AR class.
+     */
+    public static function find()
+    {
+        return new MailgunKeysQuery(get_called_class());
+    }
+
+    /**
+     * @return MailgunKeys|null
+     */
+    public static function getGoodAccount()
+    {
+        return self::find()
+            ->available()
+            ->orderBy('id')
+            ->limit(1)
+            ->one();
+    }
+
+    public function lock()
+    {
+        $this->locked = true;
+        $this->save();
+    }
+
+    public function unlock()
+    {
+        $this->locked = false;
+        $this->save();
+    }
+
+    public function ban()
+    {
+        $this->banned = true;
+        $this->save();
+    }
+
+    public function unban()
+    {
+        $this->banned = false;
+        $this->save();
     }
 }

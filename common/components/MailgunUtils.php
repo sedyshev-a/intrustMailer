@@ -14,8 +14,13 @@ class MailgunUtils extends Component
 {
 
     /** @var Mailgun */
-    protected $mailgun;
+    protected $mailgun, $pubMailgun;
     protected $domain;
+
+    /**
+     * @var MailgunKeys|null
+     */
+    protected $account;
 
     protected static $eventTypes = [
         'accepted'     => 'accepted',
@@ -31,14 +36,9 @@ class MailgunUtils extends Component
 
     public function init()
     {
-        /** @var MailgunKeys $keyItem */
-        $keyItem = MailgunKeys::findOne([
-            'status' => MailgunKeys::STATUS_ACTIVE
-        ]);
-        if (is_null($keyItem)) {
-            throw new Exception("No available mailgun accounts!");
-        }
-        $this->mailgun = new Mailgun($keyItem->api_key);
+        $this->setAccount();
+        $this->mailgun = new Mailgun($this->account->api_key);
+        $this->pubMailgun = new Mailgun($this->account->pub_key);
         $domains = $this->fetchDomains();
         if (isset ($domains[0])) {
             $this->domain = $domains[0];
@@ -46,6 +46,20 @@ class MailgunUtils extends Component
         else {
             throw new Exception("No domains in mailgun account!");
         }
+    }
+
+    public function setAccount()
+    {
+        $account = MailgunKeys::getGoodAccount();
+        if (is_null($account)) {
+            throw new Exception("No available mailgun accounts!");
+        }
+        $this->account = $account;
+    }
+
+    public function getAccount()
+    {
+        return $this->account;
     }
 
     public function checkRequiredAPIParams()
@@ -58,46 +72,46 @@ class MailgunUtils extends Component
         }
     }
 
-    public function actionIndex()
-    {
-        $emails = ['sed.yshev.a@gmail.com'];
-        $recipientVars = []; $i = 0;
-        foreach ($emails as $email) {
-            $i++;
-            $recipientVars[$email] = [
-                'name' => "Имя-$i",
-            ];
-        }
-        $recipientVars = json_encode($recipientVars);
-        $result = $this->mailgun->sendMessage($this->domain, [
-            'from'    => 'Писюнчик <manager@supercompany.com>',
-            'to'      => implode(',',$emails),
-            'subject' => 'Здесь должно быть имя: %recipient.name%',
-            'text'    => 'Это тестовое письмо, отвечать на него не надо.
-                          ПЫЩ ПЫЩ.',
-            'recipient-variables' => $recipientVars,
-        ]);
-
-        print_r($result);
-        return Controller::EXIT_CODE_NORMAL;
-    }
-    public function actionTest()
-    {
-        $MSK = new \DateTimeZone('Europe/Moscow');
-        $begin = new \DateTime('now', $MSK);
-        $begin->setTime(19,0,0);
-        $end = clone $begin;
-        $end->setTime(23,59,59);
-        $items = $this->fetchEvents(['delivered']);
-        print_r($items);
-
-        return Controller::EXIT_CODE_NORMAL;
-    }
-    public function send()
-    {
-
-        return Controller::EXIT_CODE_NORMAL;
-    }
+//    public function actionIndex()
+//    {
+//        $emails = ['sed.yshev.a@gmail.com'];
+//        $recipientVars = []; $i = 0;
+//        foreach ($emails as $email) {
+//            $i++;
+//            $recipientVars[$email] = [
+//                'name' => "Имя-$i",
+//            ];
+//        }
+//        $recipientVars = json_encode($recipientVars);
+//        $result = $this->mailgun->sendMessage($this->domain, [
+//            'from'    => 'Писюнчик <manager@supercompany.com>',
+//            'to'      => implode(',',$emails),
+//            'subject' => 'Здесь должно быть имя: %recipient.name%',
+//            'text'    => 'Это тестовое письмо, отвечать на него не надо.
+//                          ПЫЩ ПЫЩ.',
+//            'recipient-variables' => $recipientVars,
+//        ]);
+//
+//        print_r($result);
+//        return Controller::EXIT_CODE_NORMAL;
+//    }
+//    public function actionTest()
+//    {
+//        $MSK = new \DateTimeZone('Europe/Moscow');
+//        $begin = new \DateTime('now', $MSK);
+//        $begin->setTime(19,0,0);
+//        $end = clone $begin;
+//        $end->setTime(23,59,59);
+//        $items = $this->fetchEvents(['delivered']);
+//        print_r($items);
+//
+//        return Controller::EXIT_CODE_NORMAL;
+//    }
+//    public function send()
+//    {
+//
+//        return Controller::EXIT_CODE_NORMAL;
+//    }
 
     /**
      * @param array $eventList
@@ -189,6 +203,23 @@ class MailgunUtils extends Component
         $responseCode = $response->http_response_code;
         if ($responseCode != 200) {
             throw new Exception("getDomains mailgun error: $responseCode");
+        }
+        return $response->http_response_body;
+    }
+
+    public function validate($emails = [], $syntaxOnly = false)
+    {
+        $emails = implode(',',$emails);
+        if (strlen($emails) > 8000) {
+            throw new Exception("validate mailgun error: too many emails");
+        }
+        $response = $this->pubMailgun->get('address/parse', [
+            'addresses' => $emails,
+            'syntax_only' => ($syntaxOnly) ? 'true' : 'false'
+        ]);
+        $responseCode = $response->http_response_code;
+        if ($responseCode != 200) {
+            throw new Exception("validate mailgun error: $responseCode");
         }
         return $response->http_response_body;
     }

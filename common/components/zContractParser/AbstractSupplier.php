@@ -97,8 +97,10 @@ abstract class AbstractSupplier
     {
         $tldReplacements = [
             'кг' => 'ru',
-            'r' => 'ru',
-            'u' => 'ru'
+            'r'  => 'ru',
+            'u'  => 'ru',
+            'ry' => 'ru',
+            'ur' => 'ru',
         ];
         $stopUsernames = Yii::$app->params['stopList']['usernames'];
         $stopDomains =  Yii::$app->params['stopList']['domains'];
