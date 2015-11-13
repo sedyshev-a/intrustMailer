@@ -25,6 +25,8 @@ class Contacts extends \yii\db\ActiveRecord
      */
     const EMAIL_STAGE_INVALID = -1;
     const EMAIL_STAGE_NEW = 0;
+    const EMAIL_STAGE_SYNTAX_CHECKED = 1;
+    const EMAIL_STAGE_FULL_VALID = 3;
 
 
 
@@ -73,16 +75,38 @@ class Contacts extends \yii\db\ActiveRecord
 
     /**
      * @param int $limit
-     * @return array|\yii\db\ActiveRecord[]
+     * @return array|Contacts[]
      */
     public static function getVerifyingNeededEmails($limit = 1000)
     {
         $emails = self::find()
             ->select('email')
-            ->where(['emailStage' => [self::EMAIL_STAGE_NEW]])
+            ->distinct()
+            ->where(['emailStage' => [self::EMAIL_STAGE_SYNTAX_CHECKED]])
             ->limit($limit)
+            ->asArray()
             ->all();
 
         return $emails;
+    }
+
+    /**
+     * @param int $limit
+     * @return array|Contacts[]
+     */
+    public static function getNewEmails($limit = 1000)
+    {
+        $emails = self::find()
+            ->select('email')
+            ->distinct()
+            ->where(['emailStage' => [self::EMAIL_STAGE_NEW]])
+            ->limit($limit)
+            ->asArray()
+            ->all();
+        $result = [];
+        foreach ($emails as $email) {
+            $result[] = $email['email'];
+        }
+        return $result;
     }
 }
