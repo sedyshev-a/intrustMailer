@@ -2,6 +2,8 @@
 namespace console\controllers;
 
 
+use common\components\MailgunUtils;
+use common\models\Organizations;
 use Yii;
 use yii\base\Exception;
 use yii\base\ErrorException;
@@ -13,99 +15,71 @@ use common\components\PostRequest;
 class TestController extends Controller
 {
 
-    public function actionVote()
+    public function actionTest()
     {
-        $proxyUrl = 'http://www.freeproxy-list.ru/api/proxy?anonymity=false&count=1000&token=1ebb323f4e5e44678813f0f8a72f6946';
-        $content = file_get_contents($proxyUrl);
-        $rawList = explode("\n",$content);
-        $list = [];
-        foreach ($rawList as $item) {
-            $tmp = explode(':', $item);
-            $list[] = ['ip' => $tmp[0], 'port' => $tmp[1]];
-        }
-        $headers = [
-            'Content-Type: application/x-www-form-urlencoded',
-            'x-requested-with: XMLHttpRequest'
-        ];
-        $requestOptions = [
-            CURLOPT_POST           => TRUE,
-            CURLOPT_RETURNTRANSFER => TRUE,
-            CURLOPT_CONNECTTIMEOUT => 3,
-            CURLOPT_TIMEOUT        => 7,
-            CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_POSTFIELDS     => http_build_query([
-                'qid' => 3,
-                'oid' => 36,
-                'xp_action' => 'answer'
-            ]),
-        ];
-        $ch = curl_init('http://ivolga-missnn.ru/');
-        curl_setopt_array($ch, $requestOptions);
-        shuffle($list);
-        foreach ($list as $item) {
-            curl_setopt($ch, CURLOPT_PROXY, $item['ip']);
-            curl_setopt($ch, CURLOPT_PROXYPORT, $item['port']);
-            $response = curl_exec($ch);
-            if ($response) {
-                echo 'voted!' . PHP_EOL;
-            }
-            else {
-                echo 'proxy error!' . PHP_EOL;
-            }
-        }
+        $sql = <<< SQL
+SELECT o.fullName, o.shortName, o.firmName, c.email FROM yii2advanced.organizations o
+INNER JOIN yii2advanced.contacts c ON o.id = c.orgId
+WHERE (o.`type` DIV 100) in (121)
+	AND o.isBuilder=1
+    AND c.emailStage > 0
+ORDER BY o.inn
+LIMIT 9000;
+SQL;
+        $orgs = Yii::$app->db->createCommand($sql)->queryAll();
 
-        curl_close($ch);
+        $recipients = []; $recipientVars = [];
+        $i = 0;
+        foreach ($orgs as $org) {
+            if (!empty($org['shortName'])) {
+                $name = $org['shortName'];
+            } elseif (!empty($org['fullName'])) {
+                $name = $org['fullName'];
+            } else {
+                continue;
+            }
+            $email = $org['email'];
+            if (isset($recipientVars[$i][$email])) {
+                print $email . PHP_EOL;
+                continue;
+            }
+
+            $recipients[$i][] = $email;
+            $recipientVars[$i][$email]['name'] = $name;
+            if (count($recipients[$i]) === 1000) {
+                $i++;
+            }
+        }
+        $mailgun = new MailgunUtils();
+
+        $results = [];
+        foreach ($recipients as $key => $chunk) {
+            $results[] = $mailgun->send($chunk, $recipientVars[$key]);
+        }
+        echo "success" . PHP_EOL;
         return Controller::EXIT_CODE_NORMAL;
     }
 
-    public function actionVote2() {
-        $proxyUrl = 'http://www.freeproxy-list.ru/api/proxy?anonymity=false&count=1000&token=1ebb323f4e5e44678813f0f8a72f6946';
-        $content = file_get_contents($proxyUrl);
-        $rawList = explode("\n",$content);
-        $list = [];
-        foreach ($rawList as $item) {
-            $tmp = explode(':', $item);
-            $list[] = ['ip' => $tmp[0], 'port' => $tmp[1]];
-        }
-        shuffle($list);
-        $url = 'http://www.nnov.kp.ru/daily/forumcontest/photo/172006/vote?geoid=1&view=desktop';
-        $headers = [
-            'X-Requested-With: XMLHttpRequest',
-            'X-Prototype-Version: 1.7.2',
-            'Accept: text/javascript, text/html, application/xml, text/xml, */*',
-        ];
-        $requestOptions = [
-            //CURLOPT_POST           => TRUE,
-            CURLOPT_RETURNTRANSFER => TRUE,
-            CURLOPT_CONNECTTIMEOUT => 3,
-            CURLOPT_TIMEOUT        => 7,
-            CURLOPT_HTTPHEADER     => $headers,
+    public function actionEvents()
+    {
+        $MSK = new \DateTimeZone('Europe/Moscow');
+        $begin = new \DateTime('now', $MSK);
+        $begin->setTime(19,0,0);
+        $end = clone $begin;
+        $end->setTime(23,59,59);
 
-        ];
-        $ch = curl_init($url);
-        curl_setopt_array($ch, $requestOptions);
-        $proxyIndex = 0; $nextProxy = true;
-        for ($i=0;$i<1000;$i++) {
-            if ($nextProxy) {
-                if (!isset($list[$proxyIndex])) {
-                    $proxyIndex = 0;
-                }
-                curl_setopt($ch, CURLOPT_PROXY, $list[$proxyIndex]['ip']);
-                curl_setopt($ch, CURLOPT_PROXYPORT, $list[$proxyIndex]['port']);
-                $nextProxy = false;
-            }
-            $response = curl_exec($ch);
-            if ($response) {
-                echo $i . ' success!' . PHP_EOL;
-            }
-            else {
-                echo 'proxy error!' . PHP_EOL;
-                $nextProxy = true;
-                $proxyIndex++;
-            }
-        }
-        curl_close($ch);
+        $mailgun = new MailgunUtils();
+        $eventsDelivered = $mailgun->fetchEvents(['delivered']);
 
+        foreach ($eventsDelivered as $item) {
+            if (!isset($item['recipient'])) {
+                continue;
+            }
+
+        }
+
+
+        return Controller::EXIT_CODE_NORMAL;
     }
 
 }

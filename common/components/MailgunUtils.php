@@ -34,6 +34,9 @@ class MailgunUtils extends Component
         'stored'       => 'stored',
     ];
 
+    /**
+     * @throws Exception
+     */
     public function init()
     {
         $this->setAccount();
@@ -113,6 +116,31 @@ class MailgunUtils extends Component
 //        return Controller::EXIT_CODE_NORMAL;
 //    }
 
+    public function send($recipients = [], $recipientVars = [])
+    {
+        $result = [];
+        if (empty($recipients)) {
+            $result['error'] = 'empty recipients';
+            return $result;
+        }
+        if ((empty($recipientVars)) && (count($recipients) > 1)) {
+            $result['error'] = 'recipientsCount > 1 and empty recipientVars';
+            return $result;
+        }
+        if (count($recipients) > 1000) {
+            $result['error'] = 'recipients max count is 1000';
+            return $result;
+        }
+        $result = $this->mailgun->sendMessage($this->domain, [
+            'from'    => 'Сергей Иванов <manager@zakupki-info.com>',
+            'to'      => implode(',',$recipients),
+            'subject' => 'Для %recipient.name%',
+            'text'    => '.',
+            'recipient-variables' => json_encode($recipientVars),
+        ]);
+
+        return $result;
+    }
     /**
      * @param array $eventList
      * @param \DateTime $begin

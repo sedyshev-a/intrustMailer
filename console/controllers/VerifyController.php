@@ -17,13 +17,22 @@ class VerifyController extends Controller
         parent::init();
     }
 
-    public function actionVerify()
+    public function actionVerify($batchCount = 50)
     {
-        $emails = Contacts::getVerifyingNeededEmails(50);
+        $emails = Contacts::getVerifyingNeededEmails($batchCount);
         if (count($emails) < 1) {
-            print 'Nothing to send!' . PHP_EOL;
+            print 'Nothing to verify!' . PHP_EOL;
             return Controller::EXIT_CODE_NORMAL;
         }
+        try {
+            $mailgun = new MailgunUtils();
+        } catch (Exception $e) {
+            print $e->getMessage();
+            return Controller::EXIT_CODE_ERROR;
+        }
+        $mailgunAccount = $mailgun->getAccount();
+        $mailgunAccount->lock();
+
 
 
         return Controller::EXIT_CODE_NORMAL;
@@ -31,12 +40,13 @@ class VerifyController extends Controller
 
     public function actionValidate()
     {
-        $mailgun = new MailgunUtils();
-        $e = Contacts::getNewEmails(50);
-        $emails = [];
-        foreach ($e as $item) {
-            $emails[] = $item['email'];
+        try {
+            $mailgun = new MailgunUtils();
+        } catch (Exception $e) {
+            print $e->getMessage();
+            return Controller::EXIT_CODE_ERROR;
         }
+        $emails = Contacts::getNewEmails(50);
         $totalValid = $totalInvalid = 0;
         while (count($emails) > 0) {
             $res = $mailgun->validate($emails);
@@ -52,6 +62,7 @@ class VerifyController extends Controller
                 $updated = Contacts::updateAll(['emailStage' => Contacts::EMAIL_STAGE_INVALID],
                     ['in','email',$res->unparseable]);
                 print "Invalid: $invalid" . PHP_EOL;
+                print_r($res->unparseable);
                 print "Updated invalid: $updated" . PHP_EOL . PHP_EOL;
             }
 
@@ -59,14 +70,8 @@ class VerifyController extends Controller
             print '------------------------------------------------------------' . PHP_EOL;
             print "Total valid: $totalValid | Total invalid: $totalInvalid" . PHP_EOL . PHP_EOL . PHP_EOL;
 
-            $e = Contacts::getNewEmails(50);
-            $emails = [];
-            foreach ($e as $item) {
-                $emails[] = $item['email'];
-            }
+            $emails = Contacts::getNewEmails(50);
         }
-
-
 
         return Controller::EXIT_CODE_NORMAL;
     }

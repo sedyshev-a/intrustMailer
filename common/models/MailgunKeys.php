@@ -75,6 +75,17 @@ class MailgunKeys extends \yii\db\ActiveRecord
             ->one();
     }
 
+    public static function getBusyAccounts()
+    {
+        return self::find()
+            ->where([
+                'banned' => 0,
+                'locked' => 1,
+            ])
+            ->orderBy('id')
+            ->all();
+    }
+
     public function lock()
     {
         $this->locked = true;
